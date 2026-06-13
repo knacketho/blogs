@@ -1,0 +1,59 @@
+KNACKETHO BLOGS
+Article: Building an Azure Inventory Dashboard with Monitor Workbooks
+================================================================
+
+KQL QUERY COLLECTION
+────────────────────
+
+1. RESOURCE INVENTORY (Resource Graph)
+───────────────────────────────────────
+resources
+| extend resourceType = tostring(type)
+| extend friendlyType = split(resourceType, '/')[1]
+| summarize count() by tostring(friendlyType), subscriptionId, location
+| order by count_ desc
+
+2. ADVISOR RECOMMENDATIONS WITH DEEP-LINKS
+───────────────────────────────────────────
+advisorresources
+| where type == "microsoft.advisor/recommendations"
+| extend severity = case(
+    properties.impact == "High",   "High",
+    properties.impact == "Medium", "Medium",
+    properties.impact == "Low",    "Low",
+    "Unknown"
+  )
+| extend portalLink = strcat(
+    "https://portal.azure.com/#resource",
+    tostring(properties.resourceMetadata.resourceId)
+  )
+| project severity,
+          recommendation = tostring(properties.shortDescription.solution),
+          resourceId = tostring(properties.resourceMetadata.resourceId),
+          portalLink
+| order by severity asc
+
+3. RESOURCES BY SUBSCRIPTION (cross-sub)
+─────────────────────────────────────────
+resources
+| where subscriptionId in ({Subscription:id})
+| summarize count() by type, location
+| order by count_ desc
+| take 5000
+
+4. STALE RESOURCES (not modified in 90 days)
+─────────────────────────────────────────────
+resources
+| extend daysSinceModified = datetime_diff('day', now(), todatetime(properties.lastModifiedTime))
+| where daysSinceModified > 90
+| project name, type, location, daysSinceModified
+| order by daysSinceModified desc
+
+DEPLOYMENT COMMAND
+──────────────────
+az deployment group create \
+  --resource-group monitoring-rg \
+  --template-file workbook-inventory.json \
+  --parameters workbookDisplayName="Azure Inventory"
+
+Published at: knacketho.com/blogs

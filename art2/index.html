@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Taming GCP AI Cost Spikes - FinOps White Paper</title>
+<meta name="description" content="A community-driven FinOps report on Google Cloud AI cost spikes, root causes, and a five-pillar governance framework. Free PDF download.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --indigo:#3a3aff;
+    --teal:#0fb9a6;
+    --amber:#f4a623;
+    --rose:#e6396b;
+    --cyan:#1fc8db;
+    --navy:#0f1233;
+    --ink:#1b1f3b;
+    --body:#3c4257;
+    --light:#7a82a6;
+    --bg:#fbfbff;
+    --card:#ffffff;
+    --rule:#e3e6f8;
+  }
+
+  *{box-sizing:border-box; margin:0; padding:0;}
+
+  html{scroll-behavior:smooth;}
+
+  body{
+    font-family:'Inter', sans-serif;
+    color:var(--body);
+    background:var(--bg);
+    line-height:1.6;
+    overflow-x:hidden;
+  }
+
+  /* ---------- Blurred gradient background ---------- */
+  .blob-field{
+    position:fixed;
+    inset:0;
+    z-index:-1;
+    overflow:hidden;
+  }
+  .blob{
+    position:absolute;
+    border-radius:50%;
+    filter:blur(80px);
+    opacity:0.35;
+  }
+  .blob1{width:480px; height:480px; background:var(--cyan); top:-180px; right:-120px;}
+  .blob2{width:420px; height:420px; background:var(--indigo); top:10%; left:-160px; opacity:0.18;}
+  .blob3{width:520px; height:520px; background:var(--teal); bottom:-200px; right:5%; opacity:0.22;}
+  .blob4{width:380px; height:380px; background:var(--amber); bottom:5%; left:8%; opacity:0.16;}
+
+  /* ---------- Header ---------- */
+  header{
+    padding:28px 6vw;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    max-width:1180px;
+    margin:0 auto;
+  }
+  .logo{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:'Sora', sans-serif;
+    font-weight:700;
+    font-size:1.05rem;
+    color:var(--ink);
+  }
+  .logo-dots{display:flex; gap:4px;}
+  .logo-dots span{width:9px; height:9px; border-radius:3px; display:inline-block;}
+  .logo-dots span:nth-child(1){background:var(--indigo);}
+  .logo-dots span:nth-child(2){background:var(--cyan);}
+  .logo-dots span:nth-child(3){background:var(--teal);}
+  .logo-dots span:nth-child(4){background:var(--amber);}
+
+  nav a{
+    color:var(--body);
+    text-decoration:none;
+    font-size:0.92rem;
+    font-weight:500;
+    margin-left:28px;
+    transition:color 0.2s;
+  }
+  nav a:hover{color:var(--indigo);}
+
+  /* ---------- Hero ---------- */
+  .hero{
+    max-width:1180px;
+    margin:0 auto;
+    padding:60px 6vw 40px;
+    display:grid;
+    grid-template-columns:1.15fr 0.85fr;
+    gap:60px;
+    align-items:center;
+  }
+
+  .eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.74rem;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--indigo);
+    background:rgba(58,58,255,0.08);
+    padding:6px 14px;
+    border-radius:100px;
+    margin-bottom:22px;
+    font-weight:500;
+  }
+  .eyebrow::before{
+    content:"";
+    width:7px; height:7px;
+    border-radius:50%;
+    background:var(--teal);
+    display:inline-block;
+  }
+
+  h1{
+    font-family:'Sora', sans-serif;
+    font-weight:800;
+    font-size:clamp(2.2rem, 4.4vw, 3.4rem);
+    line-height:1.12;
+    color:var(--ink);
+    letter-spacing:-0.01em;
+    margin-bottom:20px;
+  }
+  h1 .accent{
+    background:linear-gradient(100deg, var(--indigo), var(--cyan) 60%, var(--teal));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+  }
+
+  .hero p.lead{
+    font-size:1.05rem;
+    color:var(--body);
+    max-width:540px;
+    margin-bottom:32px;
+  }
+
+  .cta-row{
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+    margin-bottom:18px;
+  }
+
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    gap:10px;
+    padding:14px 26px;
+    border-radius:10px;
+    font-weight:600;
+    font-size:0.95rem;
+    text-decoration:none;
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+  }
+  .btn-primary{
+    background:var(--ink);
+    color:#fff;
+    box-shadow:0 10px 30px -10px rgba(58,58,255,0.5);
+  }
+  .btn-primary:hover{transform:translateY(-2px); box-shadow:0 14px 34px -10px rgba(58,58,255,0.6);}
+  .btn-secondary{
+    background:transparent;
+    color:var(--ink);
+    border:1.5px solid var(--rule);
+  }
+  .btn-secondary:hover{border-color:var(--indigo); color:var(--indigo);}
+
+  .meta-line{
+    font-size:0.82rem;
+    color:var(--light);
+    font-family:'JetBrains Mono', monospace;
+  }
+
+  /* ---------- Hero visual: stacked doc preview ---------- */
+  .doc-preview{
+    position:relative;
+    height:420px;
+  }
+  .doc-card{
+    position:absolute;
+    width:280px;
+    border-radius:16px;
+    background:var(--card);
+    box-shadow:0 30px 60px -25px rgba(15,18,51,0.25);
+    border:1px solid var(--rule);
+    padding:22px;
+    overflow:hidden;
+  }
+  .doc-card.back{
+    top:40px; left:60px;
+    transform:rotate(-6deg);
+    opacity:0.55;
+    z-index:1;
+  }
+  .doc-card.front{
+    top:0; left:0;
+    transform:rotate(3deg);
+    z-index:2;
+  }
+  .doc-bar{height:8px; border-radius:4px; background:var(--rule); margin-bottom:10px;}
+  .doc-bar.w60{width:60%;}
+  .doc-bar.w90{width:90%;}
+  .doc-bar.w40{width:40%;}
+  .doc-chip{
+    display:inline-block;
+    font-size:0.65rem;
+    font-family:'JetBrains Mono', monospace;
+    padding:3px 8px;
+    border-radius:5px;
+    margin:2px 4px 2px 0;
+    color:#fff;
+  }
+  .doc-title-bar{
+    height:14px;
+    width:75%;
+    border-radius:4px;
+    background:linear-gradient(90deg, var(--indigo), var(--cyan));
+    margin-bottom:16px;
+  }
+  .doc-card .stats{
+    display:flex;
+    gap:8px;
+    margin-top:14px;
+  }
+  .stat-pill{
+    flex:1;
+    background:#f5f6ff;
+    border-radius:8px;
+    padding:10px 8px;
+    text-align:center;
+  }
+  .stat-pill .num{
+    font-family:'Sora', sans-serif;
+    font-weight:800;
+    font-size:1.1rem;
+    color:var(--indigo);
+  }
+  .stat-pill .lbl{
+    font-size:0.6rem;
+    color:var(--light);
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+  }
+
+  /* ---------- Stats strip ---------- */
+  .stats-strip{
+    max-width:1180px;
+    margin:20px auto 0;
+    padding:0 6vw;
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:16px;
+  }
+  .stat-box{
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-radius:14px;
+    padding:22px 18px;
+    text-align:center;
+  }
+  .stat-box .num{
+    font-family:'Sora', sans-serif;
+    font-weight:800;
+    font-size:2rem;
+    margin-bottom:4px;
+  }
+  .stat-box .lbl{
+    font-size:0.8rem;
+    color:var(--light);
+  }
+  .stat-box.c1 .num{color:var(--rose);}
+  .stat-box.c2 .num{color:var(--indigo);}
+  .stat-box.c3 .num{color:var(--teal);}
+  .stat-box.c4 .num{color:var(--amber);}
+
+  /* ---------- Section wrapper ---------- */
+  section{
+    max-width:1180px;
+    margin:0 auto;
+    padding:70px 6vw;
+  }
+  .section-head{
+    margin-bottom:36px;
+  }
+  .section-head .tag{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.74rem;
+    letter-spacing:0.12em;
+    text-transform:uppercase;
+    color:var(--teal);
+    margin-bottom:10px;
+    display:block;
+  }
+  .section-head h2{
+    font-family:'Sora', sans-serif;
+    font-weight:700;
+    font-size:clamp(1.6rem, 3vw, 2.2rem);
+    color:var(--ink);
+  }
+  .section-head p{
+    max-width:640px;
+    margin-top:12px;
+    color:var(--body);
+  }
+
+  /* ---------- Issue grid ---------- */
+  .issue-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));
+    gap:18px;
+  }
+  .issue-card{
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-radius:14px;
+    padding:22px;
+    position:relative;
+    transition:transform 0.2s, box-shadow 0.2s;
+  }
+  .issue-card:hover{
+    transform:translateY(-3px);
+    box-shadow:0 16px 40px -18px rgba(15,18,51,0.18);
+  }
+  .issue-num{
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.75rem;
+    color:var(--light);
+    margin-bottom:10px;
+  }
+  .issue-card h3{
+    font-family:'Sora', sans-serif;
+    font-size:1.02rem;
+    color:var(--ink);
+    margin-bottom:8px;
+    font-weight:700;
+    line-height:1.35;
+  }
+  .issue-card p{font-size:0.88rem; color:var(--body);}
+  .issue-card .cost-tag{
+    display:inline-block;
+    margin-top:12px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.72rem;
+    padding:4px 10px;
+    border-radius:100px;
+    font-weight:600;
+  }
+  .tag-platform{background:rgba(230,57,107,0.1); color:var(--rose);}
+  .tag-pricing{background:rgba(58,58,255,0.1); color:var(--indigo);}
+  .tag-user{background:rgba(244,166,35,0.12); color:var(--amber);}
+  .tag-mixed{background:rgba(255,138,61,0.12); color:#d96b1f;}
+
+  /* ---------- Pillars ---------- */
+  .pillar-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));
+    gap:18px;
+  }
+  .pillar-card{
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-radius:14px;
+    padding:24px;
+  }
+  .pillar-icon{
+    width:42px; height:42px;
+    border-radius:10px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    margin-bottom:16px;
+    font-size:1.2rem;
+  }
+  .pillar-card h3{
+    font-family:'Sora', sans-serif;
+    font-size:1rem;
+    color:var(--ink);
+    margin-bottom:8px;
+  }
+  .pillar-card p{font-size:0.85rem;}
+
+  /* ---------- Root cause breakdown bar ---------- */
+  .breakdown{
+    background:var(--card);
+    border:1px solid var(--rule);
+    border-radius:16px;
+    padding:30px;
+  }
+  .breakdown-bar{
+    display:flex;
+    height:14px;
+    border-radius:8px;
+    overflow:hidden;
+    margin:20px 0 28px;
+  }
+  .breakdown-bar div:nth-child(1){background:var(--rose); width:40%;}
+  .breakdown-bar div:nth-child(2){background:var(--indigo); width:35%;}
+  .breakdown-bar div:nth-child(3){background:var(--teal); width:25%;}
+
+  .breakdown-legend{
+    display:grid;
+    grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));
+    gap:20px;
+  }
+  .legend-item .dot{
+    width:11px; height:11px;
+    border-radius:3px;
+    display:inline-block;
+    margin-right:8px;
+  }
+  .legend-item h4{
+    font-family:'Sora', sans-serif;
+    font-size:0.95rem;
+    color:var(--ink);
+    margin-bottom:6px;
+    display:flex;
+    align-items:center;
+  }
+  .legend-item .pct{
+    font-family:'Sora', sans-serif;
+    font-weight:800;
+    margin-left:auto;
+  }
+  .legend-item p{font-size:0.82rem;}
+
+  /* ---------- Download CTA block ---------- */
+  .download-block{
+    background:linear-gradient(120deg, var(--navy) 0%, #1c2266 100%);
+    border-radius:20px;
+    padding:50px 6vw;
+    color:#fff;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+  }
+  .download-block::before{
+    content:"";
+    position:absolute;
+    width:340px; height:340px;
+    background:var(--cyan);
+    filter:blur(100px);
+    opacity:0.35;
+    top:-150px; left:-100px;
+    border-radius:50%;
+  }
+  .download-block::after{
+    content:"";
+    position:absolute;
+    width:300px; height:300px;
+    background:var(--teal);
+    filter:blur(110px);
+    opacity:0.3;
+    bottom:-140px; right:-80px;
+    border-radius:50%;
+  }
+  .download-block .inner{position:relative; z-index:1;}
+  .download-block h2{
+    font-family:'Sora', sans-serif;
+    font-weight:800;
+    font-size:clamp(1.6rem, 3.4vw, 2.4rem);
+    margin-bottom:14px;
+  }
+  .download-block p{
+    color:rgba(255,255,255,0.75);
+    max-width:520px;
+    margin:0 auto 28px;
+  }
+  .download-block .btn-primary{
+    background:#fff;
+    color:var(--navy);
+  }
+  .download-block .btn-primary:hover{box-shadow:0 14px 34px -10px rgba(255,255,255,0.4);}
+  .file-meta{
+    margin-top:18px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:0.78rem;
+    color:rgba(255,255,255,0.5);
+  }
+
+  /* ---------- Footer ---------- */
+  footer{
+    max-width:1180px;
+    margin:0 auto;
+    padding:50px 6vw 70px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    flex-wrap:wrap;
+    gap:20px;
+    border-top:1px solid var(--rule);
+  }
+  footer .author{font-size:0.88rem; color:var(--body);}
+  footer .author b{color:var(--ink);}
+  footer a{color:var(--indigo); text-decoration:none; font-weight:500;}
+  footer .copyright{font-size:0.78rem; color:var(--light); font-family:'JetBrains Mono', monospace;}
+
+  /* ---------- Responsive ---------- */
+  @media (max-width: 860px){
+    .hero{grid-template-columns:1fr; gap:40px;}
+    .doc-preview{height:300px; max-width:340px; margin:0 auto;}
+    .doc-card{width:230px;}
+    .doc-card.back{left:30px; top:30px;}
+    .stats-strip{grid-template-columns:repeat(2, 1fr);}
+    nav a{margin-left:16px; font-size:0.85rem;}
+  }
+  @media (max-width: 520px){
+    header{padding:20px 5vw;}
+    nav a:nth-child(3){display:none;}
+    .stats-strip{grid-template-columns:repeat(2, 1fr);}
+  }
+</style>
+</head>
+<body>
+
+<div class="blob-field">
+  <div class="blob blob1"></div>
+  <div class="blob blob2"></div>
+  <div class="blob blob3"></div>
+  <div class="blob blob4"></div>
+</div>
+
+<header>
+  <div class="logo">
+    <span class="logo-dots"><span></span><span></span><span></span><span></span></span>
+    <a href="../main.html" style="text-decoration:none;color:inherit;">knacketho<span style="color:var(--indigo)">.blogs</span></a>
+  </div>
+  <nav>
+    <a href="#issues">Issues</a>
+    <a href="#framework">Framework</a>
+    <a href="#download">Download</a>
+    <a href="../main.html" style="margin-left:24px; color:var(--light);">← All articles</a>
+  </nav>
+</header>
+
+<div class="hero">
+  <div>
+    <div class="eyebrow">Community FinOps Research &middot; 2026</div>
+    <h1>Taming GCP <span class="accent">AI cost spikes</span> before they hit your invoice</h1>
+    <p class="lead">
+      A field report built from Reddit (r/googlecloud, r/gcp) and the Google AI Developers Forum,
+      cataloguing every documented Vertex AI &amp; Gemini API cost-spike pattern, why it happens,
+      and a five-pillar FinOps framework to prevent it.
+    </p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="files/GCP_AI_Cost_Governance_WhitePaper.pdf" download>
+        Download the PDF
+      </a>
+      <a class="btn btn-secondary" href="#issues">
+        See the issue catalogue
+      </a>
+    </div>
+    <div class="meta-line">PDF &middot; 7 pages &middot; Free &middot; By knacketho-blogs</div>
+  </div>
+
+  <div class="doc-preview">
+    <div class="doc-card back">
+      <div class="doc-title-bar"></div>
+      <div class="doc-bar w90"></div>
+      <div class="doc-bar w60"></div>
+      <div class="doc-bar w40"></div>
+    </div>
+    <div class="doc-card front">
+      <span class="doc-chip" style="background:var(--rose)">Platform 40%</span>
+      <span class="doc-chip" style="background:var(--indigo)">Pricing 35%</span>
+      <span class="doc-chip" style="background:var(--amber)">Users 25%</span>
+      <div class="doc-title-bar" style="margin-top:14px;"></div>
+      <div class="doc-bar w90"></div>
+      <div class="doc-bar w60"></div>
+      <div class="stats">
+        <div class="stat-pill"><div class="num">10+</div><div class="lbl">Patterns</div></div>
+        <div class="stat-pill"><div class="num">$70K</div><div class="lbl">Max bug</div></div>
+        <div class="stat-pill"><div class="num">5</div><div class="lbl">Pillars</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="stats-strip">
+  <div class="stat-box c1"><div class="num">10+</div><div class="lbl">Cost-spike patterns catalogued</div></div>
+  <div class="stat-box c2"><div class="num">$70K</div><div class="lbl">Largest known billing bug</div></div>
+  <div class="stat-box c3"><div class="num">3</div><div class="lbl">Root-cause categories</div></div>
+  <div class="stat-box c4"><div class="num">12+</div><div class="lbl">Actionable solutions</div></div>
+</div>
+
+<section id="issues">
+  <div class="section-head">
+    <span class="tag">01 / Community signal</span>
+    <h2>What Reddit and the forums actually report</h2>
+    <p>Ten recurring failure modes, drawn from real posts between 2024 and 2026, ranked by cost impact and root-cause layer.</p>
+  </div>
+  <div class="issue-grid">
+
+    <div class="issue-card">
+      <div class="issue-num">01</div>
+      <h3>GCP billing system bug</h3>
+      <p>A 2025 billing bug left some developers with charges exceeding $70,000 for services never used &mdash; forcing Google to overhaul its billing tier system.</p>
+      <span class="cost-tag tag-platform">Platform</span>
+    </div>
+
+    <div class="issue-card">
+      <div class="issue-num">02</div>
+      <h3>Vertex AI endpoints left running</h3>
+      <p>An idle A100 GPU endpoint costs roughly $800/month whether it serves zero requests or a million. Endpoints stay billable until explicitly undeployed.</p>
+      <span class="cost-tag tag-mixed">User + Platform</span>
+    </div>
+
+    <div class="issue-card">
+      <div class="issue-num">03</div>
+      <h3>Leaked API keys</h3>
+      <p>A Gemini API key pushed to a public GitHub repo led to a $55,444.78 student bill within hours of exposure.</p>
+      <span class="cost-tag tag-user">User</span>
+    </div>
+
+    <div class="issue-card">
+      <div class="issue-num">04</div>
+      <h3>Runaway code / buggy agents</h3>
+      <p>A buggy app hit 1B Firebase reads/min and 9M Cloud Run requests/min overnight &mdash; a $72,000 bill despite a $7 budget configured.</p>
+      <span class="cost-tag tag-mixed">User + Platform</span>
+    </div>
+
+    <div class="issue-card">
+      <div class="issue-num">05</div>
+      <h3>Thinking tokens (Gemini 2.5 / 3.x)</h3>
+      <p>Reasoning tokens are billed as output. Developers migrating from earlier models often see bills 3&ndash;8x higher than expected.</p>
+      <span class="cost-tag tag-pricing">Pricing complexity</span>
+    </div>
+
+    <div class="issue-card">
+      <div class="issue-num">06</div>
+      <h3>Grounding with Google Search overage</h3>
+      <p>$35 per 1,000 grounded prompts beyond the free daily threshold &mdash; and one request can trigger multiple search queries.</p>
+      <span class="cost-tag tag-pricing">Pricing complexity</span>
+    </div>
+
+    <div class="issue-card">
+      <div class="issue-num">07</div>
+      <h3>Unexplained Gemini API spikes</h3>
+      <p>Sudden billing increases with no corresponding usage increase &mdash; likely platform bugs requiring manual support investigation.</p>
+      <span class="cost-tag tag-platform">Platform (bug)</span>
+    </div>
+
+    <div class="issue-card">
+      <div class="issue-num">08</div>
+      <h3>200K token context threshold</h3>
+      <p>Crossing the 200K input token threshold silently doubles the per-token rate on both input and output.</p>
+      <span class="cost-tag tag-pricing">Pricing complexity</span>
+    </div>
+
+    <div class="issue-card">
+      <div class="issue-num">09</div>
+      <h3>Firebase + Vertex AI fragmented billing</h3>
+      <p>Costs split across multiple line items in ways that make attribution genuinely confusing for teams.</p>
+      <span class="cost-tag tag-platform">Platform</span>
+    </div>
+
+    <div class="issue-card">
+      <div class="issue-num">10</div>
+      <h3>No hard spend caps</h3>
+      <p>Until 2026, GCP had no native kill switch. Budget alerts told you spend was happening &mdash; they didn't stop it.</p>
+      <span class="cost-tag tag-platform">Platform design gap</span>
+    </div>
+
+  </div>
+</section>
+
+<section id="rootcause">
+  <div class="section-head">
+    <span class="tag">02 / Root cause</span>
+    <h2>Is it just untrained users?</h2>
+    <p>No. Blaming cost spikes solely on user error leads to the wrong remediation strategy.</p>
+  </div>
+  <div class="breakdown">
+    <div class="breakdown-bar">
+      <div></div><div></div><div></div>
+    </div>
+    <div class="breakdown-legend">
+      <div class="legend-item">
+        <h4><span class="dot" style="background:var(--rose)"></span>Platform gaps <span class="pct" style="color:var(--rose)">~40%</span></h4>
+        <p>No hard spend caps, fragmented billing SKUs, billing bugs, endpoints billable until manually deleted.</p>
+      </div>
+      <div class="legend-item">
+        <h4><span class="dot" style="background:var(--indigo)"></span>Pricing complexity <span class="pct" style="color:var(--indigo)">~35%</span></h4>
+        <p>Thinking tokens, grounding overages, context thresholds, output-to-input ratio, history accumulation.</p>
+      </div>
+      <div class="legend-item">
+        <h4><span class="dot" style="background:var(--teal)"></span>User / org gaps <span class="pct" style="color:var(--teal)">~25%</span></h4>
+        <p>Leaked API keys, no lifecycle policies, missing FinOps reviews, wrong model tier for the task.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="framework">
+  <div class="section-head">
+    <span class="tag">03 / The response</span>
+    <h2>The five-pillar AI FinOps model</h2>
+    <p>Maps directly to the root causes above &mdash; from immediate tactical fixes to long-term capability.</p>
+  </div>
+  <div class="pillar-grid">
+    <div class="pillar-card">
+      <div class="pillar-icon" style="background:rgba(58,58,255,0.1); color:var(--indigo)">&#128065;</div>
+      <h3>Visibility</h3>
+      <p>BigQuery billing export, Cost Anomaly Detection, AI Cost Summary Agent, per-endpoint dashboards.</p>
+    </div>
+    <div class="pillar-card">
+      <div class="pillar-icon" style="background:rgba(230,57,107,0.1); color:var(--rose)">&#128274;</div>
+      <h3>Guardrails</h3>
+      <p>Spend caps, budget alerts at 50/80/100%, quota limits, Secret Manager for every API key.</p>
+    </div>
+    <div class="pillar-card">
+      <div class="pillar-icon" style="background:rgba(15,185,166,0.12); color:var(--teal)">&#9881;</div>
+      <h3>Architecture discipline</h3>
+      <p>Right-size models, Batch API, context caching, capped thinking tokens, countTokens pre-flight checks.</p>
+    </div>
+    <div class="pillar-card">
+      <div class="pillar-icon" style="background:rgba(244,166,35,0.12); color:var(--amber)">&#128203;</div>
+      <h3>Governance</h3>
+      <p>IaC-only deployments, tagging standards, endpoint lifecycle rules, sprint-level FinOps reviews.</p>
+    </div>
+    <div class="pillar-card">
+      <div class="pillar-icon" style="background:rgba(31,200,219,0.12); color:var(--cyan)">&#127891;</div>
+      <h3>Staff enablement</h3>
+      <p>Pricing literacy workshops, onboarding checklists, secret management standards, tabletop exercises.</p>
+    </div>
+  </div>
+</section>
+
+<section id="download">
+  <div class="download-block">
+    <div class="inner">
+      <h2>Get the full white paper</h2>
+      <p>
+        The complete issue catalogue, the five-pillar framework, a staff competency matrix,
+        a 30-day onboarding checklist, and quick-reference action cards &mdash; in one PDF.
+      </p>
+      <a class="btn btn-primary" href="files/GCP_AI_Cost_Governance_WhitePaper.pdf" download>
+        &#11015; Download PDF (free)
+      </a>
+      <div class="file-meta">GCP_AI_Cost_Governance_WhitePaper.pdf &middot; 7 pages &middot; v1.0 &middot; June 2026</div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="author">
+    By <b>knacketho-blogs</b> &middot;
+    <a href="https://raghunathsawant.github.io/" target="_blank">Writer profile</a>
+    &middot;
+    <a href="../main.html">← All articles</a>
+  </div>
+  <div class="copyright">&copy; 2026 &middot; Released for public distribution with attribution</div>
+</footer>
+
+</body>
+</html>

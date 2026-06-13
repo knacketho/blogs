@@ -1,0 +1,37 @@
+KNACKETHO BLOGS
+Article: Designing a Centralized Certificate Management Platform on Azure
+================================================================
+
+ARCHITECTURE OVERVIEW
+─────────────────────
+Azure Key Vault         → Single source of truth for all certificates
+AWX / Ansible Tower     → Orchestrates cert deployment across fleet
+Azure App Service       → Lightweight management frontend
+Event Grid              → Triggers renewal workflows on near-expiry
+Managed Identity        → Zero stored credentials in automation chain
+
+FLEET COVERAGE
+──────────────
+- AD-joined Windows     : WinRM + Kerberos authentication
+- Standalone Windows    : WinRM + certificate auth fallback
+- Linux (all distros)   : Short-lived SSH certificates via internal CA
+- Azure App Services    : Key Vault cert binding via ARM
+
+RENEWAL FLOW
+────────────
+1. Key Vault emits CertificateNearExpiry event (30/60/90 day thresholds)
+2. Event Grid routes to Azure Function
+3. Function calls AWX job template API with cert name + target hosts
+4. Ansible playbook deploys cert to all mapped servers
+5. Post-task: openssl s_client chain validation
+6. On failure: automatic rollback to prior Key Vault cert version
+
+DESIGN DECISIONS
+────────────────
+- Managed Identity over stored credentials (eliminates rotation burden)
+- Short-lived SSH certs (valid only for playbook run duration)
+- Full Kerberos audit trail for AD-joined Windows
+- Event-driven renewal (not cron-based)
+- Automatic rollback on chain validation failure
+
+Published at: knacketho.com/blogs

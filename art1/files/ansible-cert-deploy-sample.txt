@@ -1,0 +1,52 @@
+KNACKETHO BLOGS — SAMPLE ANSIBLE PLAYBOOK
+Article: Centralized Certificate Management on Azure
+================================================================
+
+# cert-deploy.yml
+# Deploys a certificate from Azure Key Vault to target servers.
+# Triggered by AWX job template via Event Grid → Azure Function.
+
+---
+- name: Deploy TLS Certificate from Key Vault
+  hosts: "{{ target_hosts }}"
+  gather_facts: true
+
+  vars:
+    cert_name: "{{ cert_name }}"
+    kv_name: "your-keyvault-name"
+    cert_dest_linux: "/etc/ssl/certs/{{ cert_name }}.pem"
+    cert_dest_win: "C:\\Certs\\{{ cert_name }}.pfx"
+
+  tasks:
+
+    - name: Fetch cert from Key Vault (Linux)
+      when: ansible_os_family != "Windows"
+      azure.azcollection.azure_rm_keyvaultcertificate_info:
+        vault_uri: "https://{{ kv_name }}.vault.azure.net"
+        name: "{{ cert_name }}"
+      register: cert_info
+
+    - name: Write cert to disk (Linux)
+      when: ansible_os_family != "Windows"
+      copy:
+        content: "{{ cert_info.certificates[0].cer }}"
+        dest: "{{ cert_dest_linux }}"
+        mode: '0644'
+
+    - name: Reload nginx (Linux)
+      when: ansible_os_family != "Windows"
+      service:
+        name: nginx
+        state: reloaded
+
+    - name: Validate cert chain (Linux)
+      when: ansible_os_family != "Windows"
+      command: >
+        openssl s_client -connect localhost:443
+        -showcerts </dev/null 2>/dev/null
+      register: chain_check
+      failed_when: "'Verify return code: 0' not in chain_check.stdout"
+
+    # On failure, AWX marks job FAILED → rollback job template triggers
+
+Published at: knacketho.com/blogs
