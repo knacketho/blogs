@@ -212,6 +212,51 @@
       .main { padding: 2rem 1.2rem 5rem; }
       .file-badge { display: none; }
     }
+
+  /* PHILOSOPHY DROPDOWN */
+  .philosophy-wrap {
+    border-top: 1px solid var(--border);
+    background: var(--white);
+  }
+  .philosophy-toggle {
+    width: 100%; display: flex; align-items: center; justify-content: center;
+    gap: 0.5rem; padding: 1.1rem 2rem;
+    background: none; border: none; cursor: pointer;
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.78rem;
+    color: var(--muted); letter-spacing: 0.04em;
+    transition: color 0.15s;
+  }
+  .philosophy-toggle:hover { color: var(--accent); }
+  .toggle-icon { transition: transform 0.28s ease; flex-shrink: 0; }
+  .philosophy-toggle[aria-expanded="true"] .toggle-icon { transform: rotate(180deg); }
+  .philosophy-body { max-height: 0; overflow: hidden; transition: max-height 0.4s ease; }
+  .philosophy-body.open { max-height: 900px; }
+  .philosophy-content { max-width: 820px; margin: 0 auto; padding: 0 2rem 2.5rem; }
+  .phil-title {
+    font-family: 'Space Grotesk', sans-serif; font-size: 1.1rem; font-weight: 700;
+    color: var(--ink); margin-bottom: 0.75rem; letter-spacing: -0.01em;
+  }
+  .phil-intro { color: var(--ink2); font-size: 0.88rem; line-height: 1.7; margin-bottom: 1.5rem; max-width: 620px; }
+  .phil-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.2rem; }
+  .phil-part { background: var(--bg); border: 1px solid var(--border); border-radius: 8px; padding: 1.1rem 1.2rem; }
+  .phil-part-label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 0.55rem;
+  }
+  .phil-missing { color: var(--muted); font-size: 0.62rem; text-transform: none; letter-spacing: 0; }
+  .phil-part p { font-size: 0.84rem; color: var(--ink2); line-height: 1.65; }
+  .phil-combined { background: var(--accent-bg); border: 1px solid rgba(0,85,204,0.15); border-radius: 8px; padding: 1.1rem 1.2rem; }
+  .phil-combined-label {
+    font-family: 'IBM Plex Mono', monospace; font-size: 0.68rem;
+    letter-spacing: 0.08em; text-transform: uppercase;
+    color: var(--accent); margin-bottom: 0.55rem;
+  }
+  .phil-combined p { font-size: 0.84rem; color: var(--ink2); line-height: 1.65; }
+  @media (max-width: 560px) {
+    .phil-grid { grid-template-columns: 1fr; }
+    .philosophy-content { padding: 0 1.2rem 2rem; }
+  }
   </style>
 </head>
 <body>
@@ -226,7 +271,7 @@
   <h1 class="header-title">Knacketho Blogs</h1>
   <p class="header-desc">
     Ideas, experiences, and learnings across cloud architecture, engineering, 
-    and technology — written to help others think through real problems.
+    and technology written to help others think through real problems.
     Each article includes downloadable resources.
   </p>
 </header>
@@ -361,6 +406,38 @@
 
 </main>
 
+
+<!-- KNACKETHO PHILOSOPHY DROPDOWN -->
+<div class="philosophy-wrap">
+  <button class="philosophy-toggle" id="philBtn" onclick="togglePhilosophy()" aria-expanded="false">
+    <span>What is KnackEtho?</span>
+    <svg class="toggle-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
+         stroke="currentColor" stroke-width="2">
+      <polyline points="6 9 12 15 18 9"/>
+    </svg>
+  </button>
+  <div class="philosophy-body" id="philosophyBody">
+    <div class="philosophy-content">
+      <h3 class="phil-title">The Philosophy Behind KnackEtho</h3>
+      <p class="phil-intro">KnackEtho is more than just a name, it is a mindset. It represents the intersection of intuitive problem-solving and an ever-evolving philosophy of work.</p>
+      <div class="phil-grid">
+        <div class="phil-part">
+          <div class="phil-part-label">01 · The "Knack"</div>
+          <p>A knack is an acquired, intuitive skill. It's that natural aptitude for figuring things out, seeing patterns where others see chaos, and building elegant solutions to complex problems. It represents hands-on execution, cleverness, and the drive to tinker until something works perfectly.</p>
+        </div>
+        <div class="phil-part">
+          <div class="phil-part-label">02 · The "Etho" <span class="phil-missing">(and the missing 's')</span></div>
+          <p>"Ethos" represents a fixed set of guiding beliefs. But in a technological landscape that is constantly evolving, the goal was an open loop. Dropping the 's' symbolizes a continuous, unfinished search for truth and innovation  an ethos that is never entirely static, but always adapting. By removing the final letter, the word transforms from a rigid set of rules into an active, ongoing process.</p>
+        </div>
+      </div>
+      <div class="phil-combined">
+        <div class="phil-combined-label">The Combined Meaning</div>
+        <p>KnackEtho is the philosophy of adaptable expertise. It is the belief that true skill (the knack) isn't just about what you already know, but about maintaining an open, adaptable mindset (the etho) that allows you to continuously learn, build, and innovate. Here, the focus is on creating smart solutions for today while leaving the door open for the innovations of tomorrow.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
 <footer>© 2026 Knacketho · knacketho-blogs</footer>
 
 <script>
@@ -384,6 +461,14 @@
     empty.style.display = n === 0 ? 'block' : 'none';
     count.textContent = q ? `${n} of ${total} articles` : `${total} articles`;
   });
+
+  function togglePhilosophy() {
+    const btn = document.getElementById('philBtn');
+    const body = document.getElementById('philosophyBody');
+    const isOpen = body.classList.contains('open');
+    body.classList.toggle('open');
+    btn.setAttribute('aria-expanded', String(!isOpen));
+  }
 </script>
 
 </body>
