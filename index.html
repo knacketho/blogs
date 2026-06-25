@@ -269,24 +269,55 @@
       </svg>
       <input id="q" type="text" placeholder="Search articles…" autocomplete="off" />
     </div>
-    <span class="count" id="count">2 articles</span>
+    <span class="count" id="count">3 articles</span>
   </div>
 
   <!--
   ════════════════════════════════════════════════════
   HOW TO ADD AN ARTICLE
   ────────────────────────────────────────────────────
-  1. Create a new folder:  art3/
-  2. Inside it:            art3/index.html   (the article)
-                           art3/files/       (downloads)
+  1. Create a new folder:  art4/
+  2. Inside it:            art4/index.html   (the article)
+                           art4/files/       (downloads)
   3. Copy an <li> block below, paste it at the TOP
   4. Update: href, data-search, card-num, title,
              excerpt, tags, date, read time, file count
-  5. Update the count text above (e.g. "3 articles")
+  5. Update the count text above (e.g. "4 articles")
   ════════════════════════════════════════════════════
   -->
 
   <ul class="list" id="list">
+
+    <!-- ARTICLE 3 -->
+    <li>
+      <a class="card" href="art3/index.html"
+         data-search="google cloud setup gcp landing zone foundation terraform org policy iam shared vpc resource hierarchy folders projects security command center cloud kms autokey logging monitoring hybrid connectivity ha vpn billing">
+        <span class="card-num">03</span>
+        <div class="card-body">
+          <div class="card-title">Google Cloud Setup: The Guided Foundation Most Teams Skip</div>
+          <div class="card-excerpt">
+            A practitioner's walkthrough of the console-guided flow that compiles your org, IAM, 
+            billing, resource hierarchy, security, central logging, and Shared VPC into deployable 
+            Terraform. Covers the three foundation tiers, the ten-task sequence, the hierarchy 
+            decision that's hard to undo, and when to reach for it.
+          </div>
+          <div class="card-foot">
+            <span class="tag">GCP</span>
+            <span class="tag">Foundations</span>
+            <span class="tag">Terraform</span>
+            <span class="tag">Landing Zone</span>
+            <span class="dot">·</span>
+            <span class="card-date">June 2026</span>
+            <span class="dot">·</span>
+            <span class="card-read">11 min</span>
+          </div>
+        </div>
+        <svg class="card-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none"
+             stroke="currentColor" stroke-width="2">
+          <path d="M5 12h14M12 5l7 7-7 7"/>
+        </svg>
+      </a>
+    </li>
 
     <!-- ARTICLE 2 -->
     <li>
